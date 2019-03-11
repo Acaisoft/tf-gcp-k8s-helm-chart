@@ -50,6 +50,12 @@ data "external" "config_map_data_json" {
   program = ["/bin/cat", "${lookup(var.config_maps[count.index], "data_file", "app-config-map.json")}"]
 }
 
+resource "kubernetes_namespace" "chart_namespace" {
+  metadata {
+    name = "${var.helm["namespace"]}"
+  }
+}
+
 resource "kubernetes_secret" "app_secret" {
   count = "${length(var.secrets)}"
   metadata {
@@ -58,6 +64,8 @@ resource "kubernetes_secret" "app_secret" {
   }
   data = "${data.external.secret_data_json.*.result[count.index]}"
   type = "${lookup(var.secrets[count.index], "type", "Opaque")}"
+
+  depends_on = ["kubernetes_namespace.chart_namespace"]
 }
 
 resource "kubernetes_config_map" "app_config_map" {
@@ -67,7 +75,8 @@ resource "kubernetes_config_map" "app_config_map" {
     namespace = "${var.helm["namespace"]}"
   }
   data = "${data.external.config_map_data_json.*.result[count.index]}"
-  # data = "${file(lookup(var.config_maps[count.index], "data_file", "app-config-map.json"))}",
+  
+  depends_on = ["kubernetes_namespace.chart_namespace"]
 }
 
 
@@ -80,4 +89,6 @@ resource "helm_release" "chart_release" {
     "${file(lookup(var.helm, "values", "values.yaml"))}",
     "${file(lookup(var.helm, "secret_values", "secret-values.yaml"))}"
   ]
+
+  depends_on = ["kubernetes_namespace.chart_namespace"]
 }
