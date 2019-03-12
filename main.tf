@@ -51,6 +51,7 @@ data "external" "config_map_data_json" {
 }
 
 resource "kubernetes_namespace" "chart_namespace" {
+  count = "${lookup(var.helm, "create_namespace", 1)}"
   metadata {
     name = "${var.helm["namespace"]}"
   }
@@ -73,6 +74,7 @@ resource "kubernetes_config_map" "app_config_map" {
   metadata {
     name      = "${lookup(var.config_maps[count.index], "name", "app-config-map")}"
     namespace = "${var.helm["namespace"]}"
+    labels    = "${var.config_maps_labels[count.index]}"
   }
   data = "${data.external.config_map_data_json.*.result[count.index]}"
   

@@ -4,6 +4,7 @@
 # chart_name (mandatory)
 # chart_version (mandatory)
 # namespace (mandatory)
+# create_namespace (default: 1)
 # values (default: values.yaml)
 # secret_values (default: secret-values.yaml)
 variable "helm" {
@@ -44,5 +45,11 @@ variable "secrets" {
 variable "config_maps" {
   type        = "list"
   description = "Kubernetes config maps to create"
+  default     = []
+}
+
+variable "config_maps_labels" {
+  type        = "list"
+  description = "Kubernetes config maps labels"
   default     = []
 }
